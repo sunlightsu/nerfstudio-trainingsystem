@@ -2,7 +2,7 @@
   <fieldset>
     <legend>导出配置</legend>
     <div class="form-row">
-      <label for="export-method">导出方式</label>
+      <label for="export-method">export-method / 导出方式</label>
       <select id="export-method" name="export_method">
         <option value="poisson">⭐ poisson (泊松重建·推荐)</option>
         <option value="tsdf">tsdf (TSDF 融合)</option>
@@ -13,94 +13,75 @@
       </select>
     </div>
     <div class="form-row">
-      <label for="export-config">配置文件 <span class="required">*</span></label>
+      <label for="export-config">load-config / 配置文件 <span class="required">*</span></label>
       <input id="export-config" name="load_config" type="text" placeholder="outputs/.../config.yml" required>
     </div>
     <div class="form-row">
-      <label for="export-output">输出目录 <span class="required">*</span></label>
+      <label for="export-output">output-dir / 输出目录 <span class="required">*</span></label>
       <input id="export-output" name="output_dir" type="text" placeholder="exports/mesh" required>
     </div>
   </fieldset>
 
-  <!-- poisson + pointcloud 共享 -->
+  <!-- poisson 专属 -->
   <fieldset id="export-params-poisson" class="export-params">
     <legend>Poisson 参数</legend>
     <div class="form-row">
-      <label for="exp-numpts">采样点数</label>
-      <input id="exp-numpts" name="num_points" type="number" placeholder="默认 1000000">
-    </div>
-    <div class="form-row">
-      <label>移除离群点</label>
-      <select name="remove_outliers"><option value="">默认 True</option><option value="true">True</option><option value="false">False</option></select>
-    </div>
-    <div class="form-row">
-      <label>重定向法线</label>
-      <select name="reorient_normals"><option value="">默认 True</option><option value="true">True</option><option value="false">False</option></select>
-    </div>
-    <div class="form-row">
-      <label for="exp-nmethod">法线估计方式</label>
-      <select id="exp-nmethod" name="normal_method"><option value="">默认 model_output</option><option value="open3d">open3d</option><option value="model_output">model_output</option></select>
-    </div>
-    <div class="form-row">
-      <label for="exp-texmethod">纹理方式</label>
+      <label for="exp-texmethod">texture-method / 纹理方式</label>
       <select id="exp-texmethod" name="texture_method"><option value="">默认 nerf</option><option value="nerf">nerf</option><option value="point_cloud">point_cloud</option></select>
     </div>
     <div class="form-row">
-      <label for="exp-faces">目标三角面数</label>
+      <label for="exp-faces">target-num-faces / 目标三角面数</label>
       <input id="exp-faces" name="target_num_faces" type="number" placeholder="默认 50000">
     </div>
     <div class="form-row">
-      <label for="exp-texres">纹理分辨率</label>
+      <label for="exp-texres">num-pixels-per-side / 纹理分辨率</label>
       <input id="exp-texres" name="num_pixels_per_side" type="number" placeholder="默认 2048">
     </div>
     <div class="form-row">
-      <label for="exp-uv">UV 展开方式</label>
+      <label for="exp-uv">unwrap-method / UV 展开方式</label>
       <select id="exp-uv" name="unwrap_method"><option value="">默认 xatlas</option><option value="xatlas">xatlas</option><option value="custom">custom</option></select>
     </div>
     <div class="form-row">
-      <label for="exp-rays">每批光线数</label>
-      <input id="exp-rays" name="num_rays_per_batch" type="number" placeholder="默认 32768">
-    </div>
-    <div class="form-row">
-      <label>保存中间点云</label>
+      <label>save-point-cloud / 保存中间点云</label>
       <select name="save_point_cloud"><option value="">默认 False</option><option value="true">True</option><option value="false">False</option></select>
-    </div>
-    <div class="form-row">
-      <label for="exp-std">离群点阈值倍数</label>
-      <input id="exp-std" name="std_ratio" type="number" step="0.1" placeholder="默认 10.0">
     </div>
   </fieldset>
 
-  <!-- pointcloud -->
+  <!-- pointcloud 专属 -->
   <fieldset id="export-params-pointcloud" class="export-params" style="display:none">
     <legend>Pointcloud 参数</legend>
     <div class="form-row">
-      <label for="exp-pc-numpts">采样点数</label>
-      <input id="exp-pc-numpts" name="num_points" type="number" placeholder="默认 1000000">
+      <label>save-world-frame / 保存世界坐标系</label>
+      <select name="save_world_frame"><option value="">默认 False</option><option value="true">True</option><option value="false">False</option></select>
+    </div>
+  </fieldset>
+
+  <!-- poisson + pointcloud 共享参数（由 JS 控制显隐） -->
+  <fieldset id="export-params-pc-shared" class="export-params">
+    <legend>点云采样参数</legend>
+    <div class="form-row">
+      <label for="exp-numpts">num-points / 采样点数</label>
+      <input id="exp-numpts" name="num_points" type="number" placeholder="默认 1000000">
     </div>
     <div class="form-row">
-      <label>移除离群点</label>
+      <label>remove-outliers / 移除离群点</label>
       <select name="remove_outliers"><option value="">默认 True</option><option value="true">True</option><option value="false">False</option></select>
     </div>
     <div class="form-row">
-      <label>重定向法线</label>
+      <label>reorient-normals / 重定向法线</label>
       <select name="reorient_normals"><option value="">默认 True</option><option value="true">True</option><option value="false">False</option></select>
     </div>
     <div class="form-row">
-      <label for="exp-pc-nmethod">法线估计方式</label>
-      <select id="exp-pc-nmethod" name="normal_method"><option value="">默认 model_output</option><option value="open3d">open3d</option><option value="model_output">model_output</option></select>
+      <label for="exp-nmethod">normal-method / 法线估计方式</label>
+      <select id="exp-nmethod" name="normal_method"><option value="">默认 model_output</option><option value="open3d">open3d</option><option value="model_output">model_output</option></select>
     </div>
     <div class="form-row">
-      <label for="exp-pc-rays">每批光线数</label>
-      <input id="exp-pc-rays" name="num_rays_per_batch" type="number" placeholder="默认 32768">
+      <label for="exp-rays">num-rays-per-batch / 每批光线数</label>
+      <input id="exp-rays" name="num_rays_per_batch" type="number" placeholder="默认 32768">
     </div>
     <div class="form-row">
-      <label>保存世界坐标系</label>
-      <select name="save_world_frame"><option value="">默认 False</option><option value="true">True</option><option value="false">False</option></select>
-    </div>
-    <div class="form-row">
-      <label for="exp-pc-std">离群点阈值倍数</label>
-      <input id="exp-pc-std" name="std_ratio" type="number" step="0.1" placeholder="默认 10.0">
+      <label for="exp-std">std-ratio / 离群点阈值倍数</label>
+      <input id="exp-std" name="std_ratio" type="number" step="0.1" placeholder="默认 10.0">
     </div>
   </fieldset>
 
@@ -112,7 +93,7 @@
       <input id="exp-tsdf-res" name="resolution" type="text" placeholder="128 或 128,128,128">
     </div>
     <div class="form-row">
-      <label for="exp-tsdf-down">downscale-factor / 降采样</label>
+      <label for="exp-tsdf-down">downscale-factor / 降采样因子</label>
       <input id="exp-tsdf-down" name="downscale_factor" type="number" placeholder="2">
     </div>
     <div class="form-row">
@@ -162,7 +143,7 @@
   <fieldset id="export-params-gs" class="export-params hidden">
     <legend>gaussian-splat / 高斯泼溅 参数</legend>
     <div class="form-row">
-      <label for="exp-gs-file">output-filename / 文件名</label>
+      <label for="exp-gs-file">output-filename / 输出文件名</label>
       <input id="exp-gs-file" name="output_filename" type="text" placeholder="splat.ply">
     </div>
     <div class="form-row">

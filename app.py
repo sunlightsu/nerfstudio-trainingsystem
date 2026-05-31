@@ -20,10 +20,14 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel, Field
 
-# ── FastAPI 初始化 ──────────────────────────────────────────────
+# ── 常量 ──────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).resolve().parent
 PATHS_FILE = BASE_DIR / "saved_paths.json"
+CONDA_ENV = "nerfstudio"
+
+# ── FastAPI 初始化 ──────────────────────────────────────────────
+
 app = FastAPI(title="Nerfstudio GUI", version="1.0.0")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -174,14 +178,7 @@ class ExportRequest(BaseModel):
     ply_color_mode: Optional[str] = Field(None, description="PLY 颜色模式：sh_coeffs / rgb")
 
 def _opt(key: str, value, quote: bool = False, bool_as_flag: bool = True) -> str:
-    """构建单个 CLI 选项字符串。
-
-    None 值跳过。
-    bool_as_flag=True（默认）：bool 值按标志位处理，True → --flag，False → 跳过。
-      用于 ns-process-data / ns-train（tyro 默认将 bool 视为 flag）。
-    bool_as_flag=False：bool 值输出 --flag True / --flag False。
-      用于 ns-export（部分 bool 参数需要显式值）。
-    """
+    """构建单个 CLI 选项字符串。None 跳过；bool 按 bool_as_flag 控制；含空格自动加引号。"""
     if value is None:
         return ""
     if isinstance(value, bool):
@@ -194,6 +191,14 @@ def _opt(key: str, value, quote: bool = False, bool_as_flag: bool = True) -> str
     return f"--{key} {s}"
 
 
+def _add_params(parts: list[str], pairs: list[tuple[str, object]], *, bool_as_flag: bool = True) -> None:
+    """将 (key, value) 元组列表逐个调用 _opt 后追加到 parts。（原地修改）"""
+    for key, val in pairs:
+        opt = _opt(key, val, bool_as_flag=bool_as_flag)
+        if opt:
+            parts.append(opt)
+
+
 def build_process_cmd(r: ProcessRequest) -> str:
     parts = [
         f"ns-process-data {r.data_type}",
@@ -204,7 +209,7 @@ def build_process_cmd(r: ProcessRequest) -> str:
         _opt("sfm-tool", r.sfm_tool),
         _opt("gpu", r.gpu),
     ]
-    for key, val in [
+    _add_params(parts, [
         ("num-downscales", r.num_downscales),
         ("max-dataset-size", r.max_dataset_size),
         ("crop-factor", r.crop_factor),
@@ -228,10 +233,7 @@ def build_process_cmd(r: ProcessRequest) -> str:
         ("num-frames-per-second", r.num_frames_per_second),
         ("start-frame", r.start_frame),
         ("end-frame", r.end_frame),
-    ]:
-        opt = _opt(key, val)
-        if opt:
-            parts.append(opt)
+    ])
     return " ".join(parts)
 
 
@@ -246,63 +248,47 @@ def build_train_cmd(r: TrainRequest) -> str:
         _opt("mixed-precision", r.mixed_precision),
         _opt("steps-per-save", r.steps_per_save if r.steps_per_save != 2000 else None),
     ]
-    # pipeline.datamanager: splatfacto 没有 train-num-rays-per-batch，只有 nerfacto 有
+    # pipeline.datamanager
+    dm_prefix = "pipeline.datamanager."
     if r.method == "nerfacto":
-        dm = [
-            ("train-num-rays-per-batch", r.train_num_rays_per_batch),
-            ("cache-images-type", r.cache_images_type),
-            ("camera-res-scale-factor", r.camera_res_scale_factor),
-        ]
-        for key, val in dm:
-            opt = _opt(f"pipeline.datamanager.{key}", val)
-            if opt:
-                parts.append(opt)
-    if r.method == "splatfacto":
-        # splatfacto datamanager 只接受这些
-        dm = [
-            ("cache-images-type", r.cache_images_type),
-            ("camera-res-scale-factor", r.camera_res_scale_factor),
-        ]
-        for key, val in dm:
-            opt = _opt(f"pipeline.datamanager.{key}", val)
-            if opt:
-                parts.append(opt)
-    # pipeline.model: nerfacto 专属 (hashgrid / proposal 系列)
+        _add_params(parts, [
+            (f"{dm_prefix}train-num-rays-per-batch", r.train_num_rays_per_batch),
+            (f"{dm_prefix}cache-images-type", r.cache_images_type),
+            (f"{dm_prefix}camera-res-scale-factor", r.camera_res_scale_factor),
+        ])
+    elif r.method == "splatfacto":
+        _add_params(parts, [
+            (f"{dm_prefix}cache-images-type", r.cache_images_type),
+            (f"{dm_prefix}camera-res-scale-factor", r.camera_res_scale_factor),
+        ])
+    # pipeline.model — nerfacto 专属
+    mdl_prefix = "pipeline.model."
     if r.method == "nerfacto":
-        model = [
-            ("num-nerf-samples-per-ray", r.num_nerf_samples_per_ray),
-            ("num-proposal-samples-per-ray", r.num_proposal_samples_per_ray),
-            ("max-res", r.max_res),
-            ("log2-hashmap-size", r.log2_hashmap_size),
-            ("num-levels", r.num_levels),
-            ("hidden-dim", r.hidden_dim),
-            ("hidden-dim-color", r.hidden_dim_color),
-            ("near-plane", r.near_plane),
-            ("far-plane", r.far_plane),
-            ("background-color", r.background_color),
-        ]
-        for key, val in model:
-            opt = _opt(f"pipeline.model.{key}", val)
-            if opt:
-                parts.append(opt)
-    # camera-optimizer
+        _add_params(parts, [
+            (f"{mdl_prefix}num-nerf-samples-per-ray", r.num_nerf_samples_per_ray),
+            (f"{mdl_prefix}num-proposal-samples-per-ray", r.num_proposal_samples_per_ray),
+            (f"{mdl_prefix}max-res", r.max_res),
+            (f"{mdl_prefix}log2-hashmap-size", r.log2_hashmap_size),
+            (f"{mdl_prefix}num-levels", r.num_levels),
+            (f"{mdl_prefix}hidden-dim", r.hidden_dim),
+            (f"{mdl_prefix}hidden-dim-color", r.hidden_dim_color),
+            (f"{mdl_prefix}near-plane", r.near_plane),
+            (f"{mdl_prefix}far-plane", r.far_plane),
+        ])
+    # pipeline.model — 公共参数
+    parts.append(_opt(f"{mdl_prefix}background-color", r.background_color))
     if r.camera_optimizer_mode is not None:
-        parts.append(_opt("pipeline.model.camera-optimizer.mode", r.camera_optimizer_mode))
-    # splatfacto 专属 (GS 系列)
+        parts.append(_opt(f"{mdl_prefix}camera-optimizer.mode", r.camera_optimizer_mode))
+    # splatfacto 专属
     if r.method == "splatfacto":
-        splat = [
-            ("sh-degree", r.sh_degree),
-            ("cull-alpha-thresh", r.cull_alpha_thresh),
-            ("densify-grad-thresh", r.densify_grad_thresh),
-            ("ssim-lambda", r.ssim_lambda),
-            ("refine-every", r.refine_every),
-            ("random-init", r.random_init),
-            ("background-color", r.background_color),
-        ]
-        for key, val in splat:
-            opt = _opt(f"pipeline.model.{key}", val)
-            if opt:
-                parts.append(opt)
+        _add_params(parts, [
+            (f"{mdl_prefix}sh-degree", r.sh_degree),
+            (f"{mdl_prefix}cull-alpha-thresh", r.cull_alpha_thresh),
+            (f"{mdl_prefix}densify-grad-thresh", r.densify_grad_thresh),
+            (f"{mdl_prefix}ssim-lambda", r.ssim_lambda),
+            (f"{mdl_prefix}refine-every", r.refine_every),
+            (f"{mdl_prefix}random-init", r.random_init),
+        ])
     return " ".join(parts)
 
 
@@ -312,75 +298,61 @@ def build_export_cmd(r: ExportRequest) -> str:
         _opt("load-config", r.load_config, quote=True),
         _opt("output-dir", r.output_dir, quote=True),
     ]
-    # 每种导出方式支持的参数（对照 ns-export {method} -h 实际输出）
+    # 共享参数组（按 CLI 标志名 → 请求字段）
+    _pc_base = [
+        ("num-points", r.num_points),
+        ("remove-outliers", r.remove_outliers),
+        ("reorient-normals", r.reorient_normals),
+        ("normal-method", r.normal_method),
+        ("normal-output-name", r.normal_output_name),
+        ("depth-output-name", r.depth_output_name),
+        ("rgb-output-name", r.rgb_output_name),
+    ]
+    _obb = [
+        ("obb-center", r.obb_center),
+        ("obb-rotation", r.obb_rotation),
+        ("obb-scale", r.obb_scale),
+    ]
+    _perf = [
+        ("num-rays-per-batch", r.num_rays_per_batch),
+        ("std-ratio", r.std_ratio),
+    ]
+    _mesh_tex = [
+        ("texture-method", r.texture_method),
+        ("target-num-faces", r.target_num_faces),
+        ("num-pixels-per-side", r.num_pixels_per_side),
+    ]
+    _bbox = [
+        ("bounding-box-min", r.bounding_box_min),
+        ("bounding-box-max", r.bounding_box_max),
+    ]
+
     method_params: dict[str, list[tuple[str, object]]] = {
-        "poisson": [
-            ("num-points", r.num_points),
-            ("remove-outliers", r.remove_outliers),
-            ("reorient-normals", r.reorient_normals),
-            ("depth-output-name", r.depth_output_name),
-            ("rgb-output-name", r.rgb_output_name),
-            ("normal-method", r.normal_method),
-            ("normal-output-name", r.normal_output_name),
+        "poisson": _pc_base + _obb + _perf + _mesh_tex + [
             ("save-point-cloud", r.save_point_cloud),
-            ("obb-center", r.obb_center),
-            ("obb-rotation", r.obb_rotation),
-            ("obb-scale", r.obb_scale),
-            ("num-rays-per-batch", r.num_rays_per_batch),
-            ("texture-method", r.texture_method),
             ("px-per-uv-triangle", r.px_per_uv_triangle),
             ("unwrap-method", r.unwrap_method),
-            ("num-pixels-per-side", r.num_pixels_per_side),
-            ("target-num-faces", r.target_num_faces),
-            ("std-ratio", r.std_ratio),
         ],
-        "pointcloud": [
-            ("num-points", r.num_points),
-            ("remove-outliers", r.remove_outliers),
-            ("reorient-normals", r.reorient_normals),
-            ("normal-method", r.normal_method),
-            ("normal-output-name", r.normal_output_name),
-            ("depth-output-name", r.depth_output_name),
-            ("rgb-output-name", r.rgb_output_name),
-            ("obb-center", r.obb_center),
-            ("obb-rotation", r.obb_rotation),
-            ("obb-scale", r.obb_scale),
-            ("num-rays-per-batch", r.num_rays_per_batch),
-            ("std-ratio", r.std_ratio),
+        "pointcloud": _pc_base + _obb + _perf + [
             ("save-world-frame", r.save_world_frame),
         ],
         "tsdf": [
             ("downscale-factor", r.downscale_factor),
             ("resolution", r.resolution),
             ("batch-size", r.batch_size),
-            ("bounding-box-min", r.bounding_box_min),
-            ("bounding-box-max", r.bounding_box_max),
-            ("texture-method", r.texture_method),
-            ("target-num-faces", r.target_num_faces),
-            ("num-pixels-per-side", r.num_pixels_per_side),
-        ],
+        ] + _bbox + _mesh_tex,
         "gaussian-splat": [
             ("output-filename", r.output_filename),
-            ("obb-center", r.obb_center),
-            ("obb-rotation", r.obb_rotation),
-            ("obb-scale", r.obb_scale),
             ("ply-color-mode", r.ply_color_mode),
-        ],
+        ] + _obb,
         "marching-cubes": [
             ("resolution", r.resolution),
             ("isosurface-threshold", r.isosurface_threshold),
             ("simplify-mesh", r.simplify_mesh),
-            ("bounding-box-min", r.bounding_box_min),
-            ("bounding-box-max", r.bounding_box_max),
-            ("target-num-faces", r.target_num_faces),
-            ("num-pixels-per-side", r.num_pixels_per_side),
-        ],
+        ] + _bbox + _mesh_tex,
         "cameras": [],
     }
-    for key, val in method_params.get(r.export_method, []):
-        opt = _opt(key, val, bool_as_flag=False)
-        if opt:
-            parts.append(opt)
+    _add_params(parts, method_params.get(r.export_method, []), bool_as_flag=False)
     return " ".join(parts)
 
 
@@ -388,7 +360,7 @@ def build_export_cmd(r: ExportRequest) -> str:
 
 async def run_in_conda(cmd: str) -> AsyncGenerator[str, None]:
     """在 conda nerfstudio 环境中执行命令，逐行 yield 输出。"""
-    full_cmd = f'cmd /c "conda activate nerfstudio && {cmd}"'
+    full_cmd = f'cmd /c "conda activate {CONDA_ENV} && {cmd}"'
     proc = await asyncio.create_subprocess_shell(
         full_cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -441,15 +413,11 @@ async def api_preview(request: Request):
     """仅预览命令，不执行。根据请求体中的 _type 字段路由到对应 builder。"""
     body = await request.json()
     ptype = body.pop("_type", "train")
-    if ptype == "process":
-        req_obj = ProcessRequest(**body)
-        return {"cmd": build_process_cmd(req_obj)}
-    elif ptype == "export":
-        req_obj = ExportRequest(**body)
-        return {"cmd": build_export_cmd(req_obj)}
-    else:
-        req_obj = TrainRequest(**body)
-        return {"cmd": build_train_cmd(req_obj)}
+    model_cls, builder = {
+        "process": (ProcessRequest, build_process_cmd),
+        "export": (ExportRequest, build_export_cmd),
+    }.get(ptype, (TrainRequest, build_train_cmd))
+    return {"cmd": builder(model_cls(**body))}
 
 
 @app.get("/api/browse")

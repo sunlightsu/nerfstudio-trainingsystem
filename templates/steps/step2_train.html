@@ -2,30 +2,30 @@
   <fieldset>
     <legend>训练配置</legend>
     <div class="form-row">
-      <label for="train-method">训练方法</label>
+      <label for="train-method">method / 训练方法</label>
       <select id="train-method" name="method">
         <option value="nerfacto">⭐ nerfacto (推荐·NeRF)</option>
         <option value="splatfacto">⭐ splatfacto (3DGS·实时)</option>
       </select>
     </div>
     <div class="form-row">
-      <label for="train-data">数据路径 <span class="required">*</span></label>
+      <label for="train-data">data / 数据路径 <span class="required">*</span></label>
       <input id="train-data" name="data" type="text" placeholder="E:\data\processed" required>
     </div>
     <div class="form-row">
-      <label for="train-output">输出目录</label>
+      <label for="train-output">output-dir / 输出目录</label>
       <input id="train-output" name="output_dir" type="text" value="outputs">
     </div>
     <div class="form-row">
-      <label for="train-exp">实验名称</label>
+      <label for="train-exp">experiment-name / 实验名称</label>
       <input id="train-exp" name="experiment_name" type="text" placeholder="自动使用数据集名">
     </div>
     <div class="form-row">
-      <label for="train-iter">最大迭代次数</label>
+      <label for="train-iter">max-num-iterations / 最大迭代次数</label>
       <input id="train-iter" name="max_num_iterations" type="number" value="30000" min="100">
     </div>
     <div class="form-row">
-      <label for="train-vis">可视化</label>
+      <label for="train-vis">vis / 可视化</label>
       <select id="train-vis" name="vis">
         <option value="viewer">viewer (内置)</option>
         <option value="wandb">wandb</option>
@@ -47,7 +47,7 @@
     <div id="train-advanced" class="collapsed">
       <h4 class="param-group-title">通用</h4>
       <div class="form-row">
-        <label>混合精度</label>
+        <label>mixed-precision / 混合精度</label>
         <select id="train-mp" name="mixed_precision">
           <option value="">默认</option>
           <option value="true">True</option>
@@ -55,16 +55,35 @@
         </select>
       </div>
       <div class="form-row">
-        <label for="train-save">每 N 步保存</label>
+        <label for="train-save">steps-per-save / 每 N 步保存</label>
         <input id="train-save" name="steps_per_save" type="number" value="2000">
+      </div>
+      <div class="form-row">
+        <label for="train-bg">background-color / 背景色</label>
+        <select id="train-bg" name="background_color" data-default-nerfacto="last_sample" data-default-splatfacto="random">
+          <option value="">默认 last_sample</option>
+          <option value="random" data-both="1">random</option>
+          <option value="last_sample" data-nerf="1">last_sample</option>
+          <option value="black" data-both="1">black</option>
+          <option value="white" data-nerf="1">white</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="train-copt">camera-optimizer / 相机优化</label>
+        <select id="train-copt" name="camera_optimizer_mode" data-default-nerfacto="SO3xR3" data-default-splatfacto="off">
+          <option value="">默认 SO3xR3</option>
+          <option value="off">off (关闭)</option>
+          <option value="SO3xR3">SO3xR3</option>
+          <option value="SE3">SE3</option>
+        </select>
       </div>
       <h4 class="param-group-title">数据 (pipeline.datamanager)</h4>
       <div class="form-row nerf-only">
-        <label for="train-rays">每批光线数</label>
+        <label for="train-rays">train-num-rays-per-batch / 每批光线数</label>
         <input id="train-rays" name="train_num_rays_per_batch" type="number" placeholder="默认 4096">
       </div>
       <div class="form-row">
-        <label for="train-cache">图像缓存类型</label>
+        <label for="train-cache">cache-images-type / 图像缓存类型</label>
         <select id="train-cache" name="cache_images_type">
           <option value="">默认</option>
           <option value="uint8">uint8 (省显存)</option>
@@ -72,96 +91,60 @@
         </select>
       </div>
       <div class="form-row">
-        <label for="train-scale">图像缩放因子</label>
+        <label for="train-scale">camera-res-scale-factor / 图像缩放因子</label>
         <input id="train-scale" name="camera_res_scale_factor" type="number" step="0.1" placeholder="1.0">
       </div>
       <h4 class="param-group-title nerf-only">Nerfacto 专属 (pipeline.model)</h4>
       <div class="form-row nerf-only">
-        <label for="train-nsamples">NeRF 每光线采样数</label>
+        <label for="train-nsamples">num-nerf-samples-per-ray / NeRF 每光线采样数</label>
         <input id="train-nsamples" name="num_nerf_samples_per_ray" type="number" placeholder="默认 48">
       </div>
       <div class="form-row nerf-only">
-        <label for="train-psamples">提议网络采样数</label>
+        <label for="train-psamples">num-proposal-samples-per-ray / 提议网络采样数</label>
         <input id="train-psamples" name="num_proposal_samples_per_ray" type="text" placeholder="默认 256 96">
       </div>
       <div class="form-row nerf-only">
-        <label for="train-maxres">最大分辨率</label>
+        <label for="train-maxres">max-res / 最大分辨率</label>
         <input id="train-maxres" name="max_res" type="number" placeholder="默认 2048">
       </div>
       <div class="form-row nerf-only">
-        <label for="train-hash">哈希表大小 (2^N)</label>
+        <label for="train-hash">log2-hashmap-size / 哈希表大小 (2^N)</label>
         <input id="train-hash" name="log2_hashmap_size" type="number" min="10" max="22" placeholder="默认 19">
       </div>
       <div class="form-row nerf-only">
-        <label for="train-levels">哈希层级数</label>
+        <label for="train-levels">num-levels / 哈希层级数</label>
         <input id="train-levels" name="num_levels" type="number" placeholder="默认 16">
       </div>
       <div class="form-row nerf-only">
-        <label for="train-hdim">隐藏层维度</label>
+        <label for="train-hdim">hidden-dim / 隐藏层维度</label>
         <input id="train-hdim" name="hidden_dim" type="number" placeholder="默认 64">
-      </div>
-      <div class="form-row nerf-only">
-        <label for="train-bg">背景色</label>
-        <select id="train-bg" name="background_color">
-          <option value="">默认 last_sample</option>
-          <option value="last_sample">last_sample</option>
-          <option value="random">random</option>
-          <option value="black">black</option>
-          <option value="white">white</option>
-        </select>
-      </div>
-      <div class="form-row nerf-only">
-        <label for="train-copt">相机优化</label>
-        <select id="train-copt" name="camera_optimizer_mode">
-          <option value="">默认 SO3xR3</option>
-          <option value="off">off (关闭)</option>
-          <option value="SO3xR3">SO3xR3 (推荐)</option>
-          <option value="SE3">SE3</option>
-        </select>
       </div>
       <h4 class="param-group-title gs-only hidden">Splatfacto 专属 (pipeline.model)</h4>
       <div class="form-row gs-only hidden">
-        <label for="train-sh">球谐阶数</label>
+        <label for="train-sh">sh-degree / 球谐阶数</label>
         <input id="train-sh" name="sh_degree" type="number" min="0" max="3" placeholder="默认 3">
       </div>
       <div class="form-row gs-only hidden">
-        <label for="train-alpha">透明度剔除阈值</label>
+        <label for="train-alpha">cull-alpha-thresh / 透明度剔除阈值</label>
         <input id="train-alpha" name="cull_alpha_thresh" type="number" step="0.001" placeholder="默认 0.1">
       </div>
       <div class="form-row gs-only hidden">
-        <label for="train-dgrad">稠密化梯度阈值</label>
+        <label for="train-dgrad">densify-grad-thresh / 稠密化梯度阈值</label>
         <input id="train-dgrad" name="densify_grad_thresh" type="number" step="0.0001" placeholder="默认 0.0008">
       </div>
       <div class="form-row gs-only hidden">
-        <label for="train-ssim">SSIM 损失权重</label>
+        <label for="train-ssim">ssim-lambda / SSIM 损失权重</label>
         <input id="train-ssim" name="ssim_lambda" type="number" step="0.1" placeholder="默认 0.2">
       </div>
       <div class="form-row gs-only hidden">
-        <label for="train-refine">精化间隔</label>
+        <label for="train-refine">refine-every / 精化间隔</label>
         <input id="train-refine" name="refine_every" type="number" placeholder="默认 100">
       </div>
       <div class="form-row gs-only hidden">
         <label>random-init / 随机初始化</label>
         <label class="switch-label"><input type="checkbox" name="random_init" value="true"> 启用</label>
       </div>
-      <div class="form-row gs-only hidden">
-        <label for="train-bg-gs">背景色</label>
-        <select id="train-bg-gs" name="background_color">
-          <option value="">默认 random</option>
-          <option value="random">random</option>
-          <option value="black">black</option>
-          <option value="white">white</option>
-        </select>
-      </div>
-      <div class="form-row gs-only hidden">
-        <label for="train-copt-gs">相机优化</label>
-        <select id="train-copt-gs" name="camera_optimizer_mode">
-          <option value="">默认 off</option>
-          <option value="off">off (关闭)</option>
-          <option value="SO3xR3">SO3xR3</option>
-          <option value="SE3">SE3</option>
-        </select>
-      </div>
+
     </div>
   </fieldset>
   <button type="submit" class="btn-run">▶ 开始训练</button>
