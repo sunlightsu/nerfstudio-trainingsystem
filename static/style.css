@@ -36,8 +36,9 @@ legend.collapsible:hover { color: #e94560; }
   font-size: 0.92rem; text-transform: uppercase; color: #e94560;
   margin: 10px 0 6px 0; padding-bottom: 3px; border-bottom: 1px solid #333; letter-spacing: 0.03em;
 }
-.form-row { display: flex; align-items: baseline; margin-bottom: 8px; gap: 8px; }
-.form-row > label:first-child { min-width: 180px; max-width: 200px; font-size: 0.85rem; color: #aaa; flex-shrink: 0; word-break: break-word; line-height: 1.2; }
+.form-row { display: grid; grid-template-columns: 180px 1fr; align-items: baseline; margin-bottom: 8px; gap: 8px; }
+.hidden { display: none; }
+.form-row > label:first-child { font-size: 0.85rem; color: #aaa; word-break: break-word; line-height: 1.2; }
 .form-row input[type="text"],
 .form-row input[type="number"],
 .form-row select {

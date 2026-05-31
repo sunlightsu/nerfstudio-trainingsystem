@@ -23,22 +23,25 @@ document.querySelectorAll('.collapsible').forEach(l => {
 
 /* ── 步骤1: data_type / sfm 切换 ──────────────── */
 document.querySelectorAll('input[name="data_type"]').forEach(r=>r.addEventListener('change',()=>{
-  document.querySelectorAll('.video-only').forEach(e=>e.style.display=r.value==='video'?'flex':'none');
+  document.querySelectorAll('.video-only').forEach(e=>e.classList.toggle('hidden',r.value!=='video'));
 }));
 document.getElementById('proc-sfm').addEventListener('change',function(){
-  document.querySelectorAll('.hloc-only').forEach(e=>e.style.display=this.value==='hloc'?'flex':'none');
+  document.querySelectorAll('.hloc-only').forEach(e=>e.classList.toggle('hidden',this.value!=='hloc'));
 });
 
 /* ── 步骤2: method 切换 ───────────────────────── */
 const mSel=document.getElementById('train-method');
-mSel.addEventListener('change',()=>{
+function applyMethodVisibility(){
   const gs=mSel.value.startsWith('splatfacto');
-  document.querySelectorAll('.nerf-only').forEach(e=>e.style.display=gs?'none':'block');
-  document.querySelectorAll('.gs-only').forEach(e=>e.style.display=gs?'block':'none');
-});
-mSel.dispatchEvent(new Event('change'));
+  document.querySelectorAll('.nerf-only,.gs-only').forEach(e=>{
+    const isGs=e.classList.contains('gs-only');
+    e.classList.toggle('hidden', gs ? !isGs : isGs);
+  });
+}
+mSel.addEventListener('change',applyMethodVisibility);
+applyMethodVisibility();
 
-/* ── 显存预设 ────────────────────────────────── */
+/* ── 步骤2: 显存预设 ──────────────────────────── */
 const presets={low:{train_num_rays_per_batch:1024,num_nerf_samples_per_ray:24,num_proposal_samples_per_ray:'96 48',max_res:512,log2_hashmap_size:16,num_levels:8,cache_images_type:'uint8',hidden_dim:32},mid:{train_num_rays_per_batch:2048,num_nerf_samples_per_ray:32,num_proposal_samples_per_ray:'192 64',max_res:1024,log2_hashmap_size:17,num_levels:10,cache_images_type:'uint8'},high:{}};
 document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));b.classList.add('active');
@@ -48,7 +51,7 @@ document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{
 /* ── 步骤3: export_method 切换 ────────────────── */
 const exSel=document.getElementById('export-method');
 const exGroups={poisson:'export-params-poisson',tsdf:'export-params-tsdf',pointcloud:'export-params-pointcloud','marching-cubes':'export-params-mc','gaussian-splat':'export-params-gs'};
-exSel.addEventListener('change',()=>{document.querySelectorAll('.export-params').forEach(e=>e.style.display='none');const t=exGroups[exSel.value];if(t)document.getElementById(t).style.display='block';});
+exSel.addEventListener('change',()=>{document.querySelectorAll('.export-params').forEach(e=>e.classList.add('hidden'));const t=exGroups[exSel.value];if(t)document.getElementById(t).classList.remove('hidden');});
 exSel.dispatchEvent(new Event('change'));
 
 /* ── 路径书签系统 ─────────────────────────────── */

@@ -119,28 +119,28 @@
           <option value="SE3">SE3</option>
         </select>
       </div>
-      <h4 class="param-group-title gs-only">Splatfacto 专属 (pipeline.model)</h4>
-      <div class="form-row gs-only">
+      <h4 class="param-group-title gs-only hidden">Splatfacto 专属 (pipeline.model)</h4>
+      <div class="form-row gs-only hidden">
         <label for="train-sh">球谐阶数</label>
         <input id="train-sh" name="sh_degree" type="number" min="0" max="3" placeholder="默认 3">
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-alpha">透明度剔除阈值</label>
         <input id="train-alpha" name="cull_alpha_thresh" type="number" step="0.001" placeholder="默认 0.1">
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-dgrad">稠密化梯度阈值</label>
         <input id="train-dgrad" name="densify_grad_thresh" type="number" step="0.0001" placeholder="默认 0.0008">
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-ssim">SSIM 损失权重</label>
         <input id="train-ssim" name="ssim_lambda" type="number" step="0.1" placeholder="默认 0.2">
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-refine">精化间隔</label>
         <input id="train-refine" name="refine_every" type="number" placeholder="默认 100">
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-bg-gs">背景色</label>
         <select id="train-bg-gs" name="background_color">
           <option value="">默认 random</option>
@@ -149,7 +149,7 @@
           <option value="white">white</option>
         </select>
       </div>
-      <div class="form-row gs-only">
+      <div class="form-row gs-only hidden">
         <label for="train-copt-gs">相机优化</label>
         <select id="train-copt-gs" name="camera_optimizer_mode">
           <option value="">默认 off</option>
