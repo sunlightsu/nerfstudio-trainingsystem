@@ -1,8 +1,8 @@
-nerfstudio_start.md
+*.md
 
 /data
 /.venv
 /__pycache__
 /*.pyc
 /saved_paths.json
-CLAUDE.md
+
