@@ -42,10 +42,11 @@ mSel.addEventListener('change',applyMethodVisibility);
 applyMethodVisibility();
 
 /* ── 步骤2: 显存预设 ──────────────────────────── */
-const presets={low:{train_num_rays_per_batch:1024,num_nerf_samples_per_ray:24,num_proposal_samples_per_ray:'96 48',max_res:512,log2_hashmap_size:16,num_levels:8,cache_images_type:'uint8',hidden_dim:32},mid:{train_num_rays_per_batch:2048,num_nerf_samples_per_ray:32,num_proposal_samples_per_ray:'192 64',max_res:1024,log2_hashmap_size:17,num_levels:10,cache_images_type:'uint8'},high:{}};
+const presets={nerfacto:{low:{train_num_rays_per_batch:1024,num_nerf_samples_per_ray:24,num_proposal_samples_per_ray:'96 48',max_res:512,log2_hashmap_size:16,num_levels:8,cache_images_type:'uint8',hidden_dim:32},mid:{train_num_rays_per_batch:2048,num_nerf_samples_per_ray:32,num_proposal_samples_per_ray:'192 64',max_res:1024,log2_hashmap_size:17,num_levels:10,cache_images_type:'uint8'},high:{}},splatfacto:{low:{sh_degree:1,cull_alpha_thresh:0.2,ssim_lambda:0.1},mid:{sh_degree:2,cull_alpha_thresh:0.1,ssim_lambda:0.2},high:{sh_degree:3}}};
 document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  Object.entries(presets[b.dataset.preset]).forEach(([k,v])=>{const e=document.querySelector(`[name="${k}"]`);if(e){if(e.tagName==='SELECT')e.value=v;else e.value=v;}});
+  const method=mSel.value.split('-')[0];const vals=(presets[method]||presets.nerfacto)[b.dataset.preset]||{};
+  Object.entries(vals).forEach(([k,v])=>{const e=document.querySelector(`[name="${k}"]`);if(e){if(e.tagName==='SELECT')e.value=v;else e.value=v;}});
 }));
 
 /* ── 步骤3: export_method 切换 ────────────────── */
@@ -80,7 +81,7 @@ document.querySelectorAll('input[name="data"],input[name="output_dir"],input[nam
 let browserInit=false;
 function initBrowser(){if(browserInit)return;browserInit=true;
   const inp=document.getElementById('browse-path');const list=document.getElementById('browse-list');const bc=document.getElementById('browse-breadcrumb');
-  async function browse(p){try{const r=await fetch('/api/browse?path='+encodeURIComponent(p));const d=await r.json();inp.value=d.current||p;renderBreadcrumb(d.current);renderList(d.folders,d.current);}catch(e){}}
+  async function browse(p){try{const r=await fetch('/api/browse?path='+encodeURIComponent(p));if(!r.ok){appendTerm('浏览失败: '+r.status+'\n','err-line');return;}const d=await r.json();if(d.error){appendTerm(d.error+'\n','err-line');return;}inp.value=d.current||p;renderBreadcrumb(d.current);renderList(d.folders,d.current);}catch(e){appendTerm('浏览错误: '+e.message+'\n','err-line');}}
   function renderBreadcrumb(current){if(!current)return;const parts=current.split('\\').filter(Boolean);let acc='';let html='';parts.forEach((p,i)=>{acc+=(i===0?p:'\\'+p);html+=`<a data-path="${acc}">${p}</a> ${i<parts.length-1?'\\ ':''}`;});bc.innerHTML=html;bc.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>browse(a.dataset.path)));}
   function renderList(folders,current){list.innerHTML=''; folders.forEach(f=>{const div=document.createElement('div');div.className='browse-item';
     div.innerHTML=`<span class="folder-icon">📁</span><span class="item-name">${f.name}</span>`;
@@ -134,7 +135,7 @@ document.getElementById('btn-copy-cmd').addEventListener('click',()=>{if(lastCmd
 async function runCmd(endpoint,data){document.querySelectorAll('.btn-run').forEach(b=>b.disabled=true);termOut.innerHTML='';lastCmd='';setStat('running','执行中...');
   try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok){appendTerm('HTTP '+r.status+'\n','err-line');setStat('error','请求失败');return;}
     const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
-    while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();
+    while(true){const{done,value}=await reader.read();if(done){flushBuf();break;}buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();
       for(const l of lines){if(l.startsWith('__CMD__:')){lastCmd=l.slice(8);appendTerm('$ '+lastCmd+'\n','cmd-line');}else if(l.startsWith('__EXIT_CODE__:')){const c=parseInt(l.slice(14));if(c===0){appendTerm('\n── 完成 (exit 0) ──\n','info-line');setStat('done','完成 ✓');}else{appendTerm('\n── 失败 (exit '+c+') ──\n','err-line');setStat('error','失败');}}else{appendTerm(l+'\n');}}}
     flushBuf();
   }catch(e){appendTerm('Error: '+e.message+'\n','err-line');setStat('error','连接错误');flushBuf();}

@@ -105,32 +105,44 @@
   </fieldset>
 
   <!-- tsdf -->
-  <fieldset id="export-params-tsdf" class="export-params" style="display:none">
-    <legend>TSDF 参数</legend>
+  <fieldset id="export-params-tsdf" class="export-params hidden">
+    <legend>TSDF / TSDF融合 参数</legend>
     <div class="form-row">
-      <label for="exp-tsdf-res">体素分辨率</label>
+      <label for="exp-tsdf-res">resolution / 体素分辨率</label>
       <input id="exp-tsdf-res" name="resolution" type="text" placeholder="128 或 128,128,128">
     </div>
     <div class="form-row">
-      <label for="exp-tsdf-faces">目标三角面数</label>
-      <input id="exp-tsdf-faces" name="target_num_faces" type="number" placeholder="默认 50000">
+      <label for="exp-tsdf-down">downscale-factor / 降采样</label>
+      <input id="exp-tsdf-down" name="downscale_factor" type="number" placeholder="2">
     </div>
     <div class="form-row">
-      <label for="exp-tsdf-texres">纹理分辨率</label>
-      <input id="exp-tsdf-texres" name="num_pixels_per_side" type="number" placeholder="默认 2048">
+      <label for="exp-tsdf-batch">batch-size / 批大小</label>
+      <input id="exp-tsdf-batch" name="batch_size" type="number" placeholder="10">
     </div>
     <div class="form-row">
-      <label for="exp-tsdf-texmethod">纹理方式</label>
-      <select id="exp-tsdf-texmethod" name="texture_method"><option value="">默认 nerf</option><option value="nerf">nerf</option><option value="tsdf">tsdf</option></select>
+      <label for="exp-tsdf-faces">target-num-faces / 目标面数</label>
+      <input id="exp-tsdf-faces" name="target_num_faces" type="number" placeholder="50000">
+    </div>
+    <div class="form-row">
+      <label for="exp-tsdf-texres">num-pixels-per-side / 纹理分辨率</label>
+      <input id="exp-tsdf-texres" name="num_pixels_per_side" type="number" placeholder="2048">
+    </div>
+    <div class="form-row">
+      <label for="exp-tsdf-texmethod">texture-method / 纹理方式</label>
+      <select id="exp-tsdf-texmethod" name="texture_method"><option value="">nerf</option><option value="nerf">nerf</option><option value="tsdf">tsdf</option></select>
     </div>
   </fieldset>
 
   <!-- marching-cubes -->
-  <fieldset id="export-params-mc" class="export-params" style="display:none">
-    <legend>Marching Cubes 参数</legend>
+  <fieldset id="export-params-mc" class="export-params hidden">
+    <legend>marching-cubes / 移动立方体 参数</legend>
     <div class="form-row">
       <label for="exp-mc-res">resolution / 分辨率</label>
-      <input id="exp-mc-res" name="resolution" type="number" placeholder="默认 1024">
+      <input id="exp-mc-res" name="resolution" type="number" placeholder="1024">
+    </div>
+    <div class="form-row">
+      <label for="exp-mc-iso">isosurface-threshold / 等值面阈值</label>
+      <input id="exp-mc-iso" name="isosurface_threshold" type="number" step="0.01" placeholder="0.0">
     </div>
     <div class="form-row">
       <label for="exp-mc-faces">target-num-faces / 目标面数</label>
@@ -147,17 +159,29 @@
   </fieldset>
 
   <!-- gaussian-splat -->
-  <fieldset id="export-params-gs" class="export-params" style="display:none">
-    <legend>Gaussian-Splat 参数</legend>
+  <fieldset id="export-params-gs" class="export-params hidden">
+    <legend>gaussian-splat / 高斯泼溅 参数</legend>
     <div class="form-row">
-      <label for="exp-gs-file">output-filename / 输出文件名</label>
-      <input id="exp-gs-file" name="output_filename" type="text" placeholder="默认 splat.ply">
+      <label for="exp-gs-file">output-filename / 文件名</label>
+      <input id="exp-gs-file" name="output_filename" type="text" placeholder="splat.ply">
     </div>
     <div class="form-row">
       <label for="exp-gs-color">ply-color-mode / 颜色模式</label>
       <select id="exp-gs-color" name="ply_color_mode">
-        <option value="">默认 sh_coeffs</option><option value="sh_coeffs">sh_coeffs (球谐)</option><option value="rgb">rgb</option>
+        <option value="">sh_coeffs</option><option value="sh_coeffs">sh_coeffs</option><option value="rgb">rgb</option>
       </select>
+    </div>
+    <div class="form-row">
+      <label for="exp-gs-obb">obb-center / 包围盒中心</label>
+      <input id="exp-gs-obb" name="obb_center" type="text" placeholder="x y z">
+    </div>
+    <div class="form-row">
+      <label for="exp-gs-obr">obb-rotation / 包围盒旋转</label>
+      <input id="exp-gs-obr" name="obb_rotation" type="text" placeholder="RPY 弧度">
+    </div>
+    <div class="form-row">
+      <label for="exp-gs-obs">obb-scale / 包围盒缩放</label>
+      <input id="exp-gs-obs" name="obb_scale" type="text" placeholder="x y z">
     </div>
   </fieldset>
 
